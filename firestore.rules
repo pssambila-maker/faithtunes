@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Admin UIDs allowlist - replace with your admin UIDs
+    function isAdmin() {
+      return request.auth != null &&
+             request.auth.uid in ['REPLACE_WITH_ADMIN_UID_1', 'REPLACE_WITH_ADMIN_UID_2'];
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Songs collection
+    match /songs/{songId} {
+      // Any authenticated user can read published songs
+      allow read: if isAuthenticated() && resource.data.published == true;
+
+      // Admins can read all songs (including unpublished)
+      allow read: if isAdmin();
+
+      // Only admins can create, update, delete
+      allow create, update, delete: if isAdmin();
+    }
+
+    // User favorites subcollection
+    match /users/{userId}/favorites/{favoriteId} {
+      // Users can only read/write their own favorites
+      allow read, write: if isOwner(userId);
+    }
+
+    // User profile (optional, for future expansion)
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+    }
+  }
+}

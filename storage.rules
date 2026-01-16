@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Admin UIDs allowlist - must match Firestore rules
+    function isAdmin() {
+      return request.auth != null &&
+             request.auth.uid in ['REPLACE_WITH_ADMIN_UID_1', 'REPLACE_WITH_ADMIN_UID_2'];
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Song audio files
+    match /songs/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Cover art images
+    match /covers/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}
