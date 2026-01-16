@@ -80,11 +80,11 @@ export default function SongCard({ song, onPlay, isPlaying, isCurrentSong }) {
       </div>
 
       {/* Tags */}
-      {song.tags && song.tags.length > 0 && (
+      {song.tags && Array.isArray(song.tags) && song.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1">
-          {song.tags.slice(0, 3).map((tag) => (
+          {song.tags.slice(0, 3).map((tag, index) => (
             <span
-              key={tag}
+              key={index}
               className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full"
             >
               {tag}

@@ -13,17 +13,20 @@ import { db, storage } from './firebase';
 const songsRef = collection(db, 'songs');
 
 export async function getPublishedSongs() {
-  const q = query(
-    songsRef,
-    where('published', '==', true),
-    orderBy('title')
-  );
-
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({
+  // Fetch all songs and filter client-side for debugging
+  const snapshot = await getDocs(songsRef);
+  const allSongs = snapshot.docs.map(doc => ({
     id: doc.id,
     ...doc.data()
   }));
+
+  // Filter for published songs (handles both boolean and string)
+  const songs = allSongs.filter(song =>
+    song.published === true || song.published === 'true'
+  );
+
+  // Sort client-side by title
+  return songs.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
 }
 
 export async function getSongById(songId) {
