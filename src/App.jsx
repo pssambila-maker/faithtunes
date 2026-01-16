@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import LibraryPage from './pages/LibraryPage';
 import FavoritesPage from './pages/FavoritesPage';
+import AdminPage from './pages/AdminPage';
 
 function AppLayout({ children }) {
   return (
@@ -51,6 +52,17 @@ export default function App() {
                     <ProtectedRoute>
                       <AppLayout>
                         <FavoritesPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <AdminPage />
                       </AppLayout>
                     </ProtectedRoute>
                   }

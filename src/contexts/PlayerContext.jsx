@@ -33,15 +33,24 @@ export function PlayerProvider({ children }) {
         // Repeat the same song
         audio.currentTime = 0;
         audio.play();
-      } else if (repeatMode === 'all' && playlist.length > 0) {
-        // Play next song, loop back to first when at end
+      } else if (playlist.length > 0) {
+        // Play next song in playlist
         const currentIndex = playlist.findIndex(s => s.id === currentSong?.id);
-        const nextIndex = (currentIndex + 1) % playlist.length;
-        if (playlist[nextIndex]) {
+        const nextIndex = currentIndex + 1;
+
+        if (nextIndex < playlist.length) {
+          // Play next song
           playSong(playlist[nextIndex], playlist);
+        } else if (repeatMode === 'all') {
+          // Loop back to first song when repeat all is on
+          playSong(playlist[0], playlist);
+        } else {
+          // End of playlist, no repeat - stop
+          setIsPlaying(false);
+          setCurrentTime(0);
         }
       } else {
-        // No repeat - stop at end or play next if available
+        // No playlist - stop
         setIsPlaying(false);
         setCurrentTime(0);
       }

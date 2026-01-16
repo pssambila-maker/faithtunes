@@ -3,7 +3,7 @@ import { Play, Pause } from 'lucide-react';
 import { getCoverUrl } from '../../services/songService';
 import FavoriteButton from '../favorites/FavoriteButton';
 
-export default function SongCard({ song, onPlay, isPlaying, isCurrentSong }) {
+export default function SongCard({ song, onPlay, isPlaying, isCurrentSong, selectMode, isSelected, selectionOrder }) {
   const [coverUrl, setCoverUrl] = useState(null);
   const [imageLoading, setImageLoading] = useState(true);
 
@@ -32,7 +32,7 @@ export default function SongCard({ song, onPlay, isPlaying, isCurrentSong }) {
     <div
       className={`bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition cursor-pointer group ${
         isCurrentSong ? 'ring-2 ring-green-500' : ''
-      }`}
+      } ${selectMode && isSelected ? 'ring-2 ring-blue-500 bg-blue-900/20' : ''}`}
       onClick={() => onPlay(song)}
     >
       {/* Cover Art */}
@@ -53,19 +53,38 @@ export default function SongCard({ song, onPlay, isPlaying, isCurrentSong }) {
           </div>
         )}
 
-        {/* Play button overlay */}
-        <button
-          className={`absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-105 hover:bg-green-400 transition ${
-            isCurrentSong ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-          }`}
-          onClick={handlePlay}
-        >
-          {isCurrentSong && isPlaying ? (
-            <Pause className="w-6 h-6 text-black fill-black" />
-          ) : (
-            <Play className="w-6 h-6 text-black fill-black ml-1" />
-          )}
-        </button>
+        {/* Selection indicator at top-left corner in select mode */}
+        {selectMode && (
+          <div
+            className={`absolute top-2 left-2 w-8 h-8 rounded-full flex items-center justify-center shadow-lg border-2 ${
+              isSelected
+                ? 'bg-blue-500 border-blue-500'
+                : 'bg-gray-800/80 border-gray-400'
+            }`}
+          >
+            {isSelected ? (
+              <span className="text-white font-bold text-sm">{selectionOrder}</span>
+            ) : (
+              <span className="text-gray-400 text-xs">+</span>
+            )}
+          </div>
+        )}
+
+        {/* Play button overlay (hidden in select mode) */}
+        {!selectMode && (
+          <button
+            className={`absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:scale-105 hover:bg-green-400 transition ${
+              isCurrentSong ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            }`}
+            onClick={handlePlay}
+          >
+            {isCurrentSong && isPlaying ? (
+              <Pause className="w-6 h-6 text-black fill-black" />
+            ) : (
+              <Play className="w-6 h-6 text-black fill-black ml-1" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* Song Info */}

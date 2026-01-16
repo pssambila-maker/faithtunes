@@ -1,11 +1,15 @@
 import SongCard from './SongCard';
 import { usePlayer } from '../../contexts/PlayerContext';
 
-export default function SongList({ songs, emptyMessage }) {
+export default function SongList({ songs, emptyMessage, selectMode, selectedSongs = [], onToggleSelect }) {
   const { currentSong, isPlaying, playSong } = usePlayer();
 
   const handlePlay = (song) => {
-    playSong(song, songs);
+    if (selectMode) {
+      onToggleSelect(song);
+    } else {
+      playSong(song, songs);
+    }
   };
 
   if (songs.length === 0) {
@@ -25,6 +29,9 @@ export default function SongList({ songs, emptyMessage }) {
           onPlay={handlePlay}
           isPlaying={isPlaying}
           isCurrentSong={currentSong?.id === song.id}
+          selectMode={selectMode}
+          isSelected={selectedSongs.some(s => s.id === song.id)}
+          selectionOrder={selectedSongs.findIndex(s => s.id === song.id) + 1}
         />
       ))}
     </div>

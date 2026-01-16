@@ -15,7 +15,10 @@ service cloud.firestore {
     // Admin UIDs allowlist
     function isAdmin() {
       return request.auth != null &&
-             request.auth.uid in ['ahyesXEL5reyWMKwyanOQ853pey2'];
+             request.auth.uid in [
+               'tGI50dxIhJQmFbsqucuJJb8FenG3',
+               'xTye4MLVkOUOy7Cb98mnjwXInGP2'
+             ];
     }
 
     // Studies collection - users can only access their own studies

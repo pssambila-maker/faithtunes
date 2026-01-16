@@ -1,11 +1,49 @@
+import { useState } from 'react';
 import { useSongs } from '../hooks/useSongs';
+import { usePlayer } from '../contexts/PlayerContext';
 import SearchBar from '../components/library/SearchBar';
 import SongList from '../components/library/SongList';
 import Loader from '../components/ui/Loader';
-import { Library } from 'lucide-react';
+import { Library, Play, X, CheckSquare, ChevronDown } from 'lucide-react';
 
 export default function LibraryPage() {
-  const { songs, allSongs, loading, error, searchTerm, setSearchTerm } = useSongs();
+  const { songs, allSongs, loading, loadingMore, error, searchTerm, setSearchTerm, hasMore, loadMore, totalCount } = useSongs();
+  const { playSong } = usePlayer();
+  const [selectedSongs, setSelectedSongs] = useState([]);
+  const [selectMode, setSelectMode] = useState(false);
+
+  const handlePlayAll = () => {
+    if (songs.length > 0) {
+      playSong(songs[0], songs);
+    }
+  };
+
+  const handlePlaySelected = () => {
+    if (selectedSongs.length > 0) {
+      // Play in the order they were selected
+      playSong(selectedSongs[0], selectedSongs);
+      setSelectedSongs([]);
+      setSelectMode(false);
+    }
+  };
+
+  const toggleSelectMode = () => {
+    setSelectMode(!selectMode);
+    if (selectMode) {
+      setSelectedSongs([]);
+    }
+  };
+
+  const toggleSongSelection = (song) => {
+    setSelectedSongs(prev => {
+      const isSelected = prev.some(s => s.id === song.id);
+      if (isSelected) {
+        return prev.filter(s => s.id !== song.id);
+      } else {
+        return [...prev, song];
+      }
+    });
+  };
 
   if (loading) {
     return (
@@ -37,9 +75,49 @@ export default function LibraryPage() {
               <div>
                 <h1 className="text-2xl font-bold text-white">Your Library</h1>
                 <p className="text-gray-400 text-sm">
-                  {allSongs.length} {allSongs.length === 1 ? 'song' : 'songs'} available
+                  {allSongs.length} of {totalCount} {totalCount === 1 ? 'song' : 'songs'} loaded
                 </p>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {selectMode ? (
+                <>
+                  <button
+                    onClick={handlePlaySelected}
+                    disabled={selectedSongs.length === 0}
+                    className="flex items-center gap-2 bg-green-500 hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-semibold px-4 py-2 rounded-full transition"
+                  >
+                    <Play className="w-5 h-5 fill-black" />
+                    Play {selectedSongs.length > 0 ? `(${selectedSongs.length})` : 'Selected'}
+                  </button>
+                  <button
+                    onClick={toggleSelectMode}
+                    className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full transition"
+                  >
+                    <X className="w-5 h-5" />
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handlePlayAll}
+                    disabled={songs.length === 0}
+                    className="flex items-center gap-2 bg-green-500 hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-semibold px-4 py-2 rounded-full transition"
+                  >
+                    <Play className="w-5 h-5 fill-black" />
+                    Play All
+                  </button>
+                  <button
+                    onClick={toggleSelectMode}
+                    disabled={songs.length === 0}
+                    className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white px-4 py-2 rounded-full transition"
+                  >
+                    <CheckSquare className="w-5 h-5" />
+                    Select
+                  </button>
+                </>
+              )}
             </div>
           </div>
           <SearchBar value={searchTerm} onChange={setSearchTerm} />
@@ -56,12 +134,38 @@ export default function LibraryPage() {
           )}
           <SongList
             songs={songs}
+            selectMode={selectMode}
+            selectedSongs={selectedSongs}
+            onToggleSelect={toggleSongSelection}
             emptyMessage={
               searchTerm
                 ? 'No songs match your search'
                 : 'No songs in your library yet'
             }
           />
+
+          {/* Load More Button */}
+          {hasMore && !searchTerm && (
+            <div className="flex justify-center mt-8">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white px-6 py-3 rounded-full transition"
+              >
+                {loadingMore ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-5 h-5" />
+                    Load More Songs
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </div>
