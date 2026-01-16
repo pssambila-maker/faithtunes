@@ -13,6 +13,7 @@ export function PlayerProvider({ children }) {
   const [volume, setVolumeState] = useState(1);
   const [coverUrl, setCoverUrl] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [repeatMode, setRepeatMode] = useState('off'); // 'off', 'all', 'one'
 
   // Setup audio event listeners
   useEffect(() => {
@@ -28,10 +29,22 @@ export function PlayerProvider({ children }) {
     };
 
     const handleEnded = () => {
-      setIsPlaying(false);
-      setCurrentTime(0);
-      // Play next song if available
-      playNext();
+      if (repeatMode === 'one') {
+        // Repeat the same song
+        audio.currentTime = 0;
+        audio.play();
+      } else if (repeatMode === 'all' && playlist.length > 0) {
+        // Play next song, loop back to first when at end
+        const currentIndex = playlist.findIndex(s => s.id === currentSong?.id);
+        const nextIndex = (currentIndex + 1) % playlist.length;
+        if (playlist[nextIndex]) {
+          playSong(playlist[nextIndex], playlist);
+        }
+      } else {
+        // No repeat - stop at end or play next if available
+        setIsPlaying(false);
+        setCurrentTime(0);
+      }
     };
 
     const handleError = (e) => {
@@ -56,7 +69,7 @@ export function PlayerProvider({ children }) {
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('canplay', handleCanPlay);
     };
-  }, []);
+  }, [repeatMode, playlist, currentSong]);
 
   // Handle volume changes
   useEffect(() => {
@@ -135,6 +148,14 @@ export function PlayerProvider({ children }) {
     }
   }, [currentSong, playlist, playSong]);
 
+  const toggleRepeat = useCallback(() => {
+    setRepeatMode(prev => {
+      if (prev === 'off') return 'all';
+      if (prev === 'all') return 'one';
+      return 'off';
+    });
+  }, []);
+
   const value = {
     currentSong,
     isPlaying,
@@ -144,12 +165,14 @@ export function PlayerProvider({ children }) {
     coverUrl,
     loading,
     playlist,
+    repeatMode,
     playSong,
     togglePlay,
     seek,
     setVolume,
     playNext,
-    playPrevious
+    playPrevious,
+    toggleRepeat
   };
 
   return (

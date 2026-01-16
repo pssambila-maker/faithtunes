@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Repeat, Repeat1 } from 'lucide-react';
 import { usePlayer } from '../../contexts/PlayerContext';
 import FavoriteButton from '../favorites/FavoriteButton';
 import ProgressBar from './ProgressBar';
@@ -19,11 +19,13 @@ export default function AudioPlayer() {
     volume,
     coverUrl,
     loading,
+    repeatMode,
     togglePlay,
     seek,
     setVolume,
     playNext,
-    playPrevious
+    playPrevious,
+    toggleRepeat
   } = usePlayer();
 
   if (!currentSong) return null;
@@ -90,6 +92,23 @@ export default function AudioPlayer() {
               title="Next"
             >
               <SkipForward className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={toggleRepeat}
+              className={`p-1 transition ${
+                repeatMode !== 'off' ? 'text-green-500' : 'text-gray-400 hover:text-white'
+              }`}
+              title={
+                repeatMode === 'one' ? 'Repeat One' :
+                repeatMode === 'all' ? 'Repeat All' : 'Repeat Off'
+              }
+            >
+              {repeatMode === 'one' ? (
+                <Repeat1 className="w-5 h-5" />
+              ) : (
+                <Repeat className="w-5 h-5" />
+              )}
             </button>
           </div>
 
