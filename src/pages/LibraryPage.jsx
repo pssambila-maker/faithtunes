@@ -1,16 +1,24 @@
 import { useState } from 'react';
 import { useSongs } from '../hooks/useSongs';
 import { usePlayer } from '../contexts/PlayerContext';
-import SearchBar from '../components/library/SearchBar';
+import { useAuth } from '../contexts/AuthContext';
 import SongList from '../components/library/SongList';
 import Loader from '../components/ui/Loader';
-import { Library, Play, X, CheckSquare, ChevronDown } from 'lucide-react';
+import { Library, Play, X, CheckSquare, ChevronDown, Search } from 'lucide-react';
+
+const ADMIN_UIDS = [
+  'tGI50dxIhJQmFbsqucuJJb8FenG3',
+  'xTye4MLVkOUOy7Cb98mnjwXInGP2'
+];
 
 export default function LibraryPage() {
   const { songs, allSongs, loading, loadingMore, error, searchTerm, setSearchTerm, hasMore, loadMore, totalCount } = useSongs();
   const { playSong } = usePlayer();
+  const { user } = useAuth();
   const [selectedSongs, setSelectedSongs] = useState([]);
   const [selectMode, setSelectMode] = useState(false);
+
+  const isAdmin = ADMIN_UIDS.includes(user?.uid);
 
   const handlePlayAll = () => {
     if (songs.length > 0) {
@@ -69,15 +77,15 @@ export default function LibraryPage() {
       {/* Header */}
       <header className="sticky top-16 bg-gray-900/95 backdrop-blur-sm z-10 px-6 py-4 border-b border-gray-800">
         <div className="max-w-screen-xl mx-auto">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Library className="w-8 h-8 text-green-500" />
-              <div>
-                <h1 className="text-2xl font-bold text-white">Your Library</h1>
-                <p className="text-gray-400 text-sm">
-                  {allSongs.length} of {totalCount} {totalCount === 1 ? 'song' : 'songs'} loaded
-                </p>
-              </div>
+              <h1 className="text-2xl font-bold text-white">Your Library</h1>
+              {isAdmin && (
+                <span className="text-gray-500 text-sm">
+                  ({allSongs.length} of {totalCount} loaded)
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {selectMode ? (
@@ -118,9 +126,27 @@ export default function LibraryPage() {
                   </button>
                 </>
               )}
+              {/* Search Bar - inline */}
+              <div className="relative ml-6">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by title, artist, tag..."
+                  className="w-64 pl-9 pr-8 py-2 bg-gray-800 text-white text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 transition placeholder-gray-400"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-          <SearchBar value={searchTerm} onChange={setSearchTerm} />
         </div>
       </header>
 

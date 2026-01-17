@@ -8,6 +8,7 @@ import Navbar from './components/ui/Navbar';
 import AudioPlayer from './components/player/AudioPlayer';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import HomePage from './pages/HomePage';
 import LibraryPage from './pages/LibraryPage';
 import FavoritesPage from './pages/FavoritesPage';
 import AdminPage from './pages/AdminPage';
@@ -35,6 +36,17 @@ export default function App() {
                 <Route path="/signup" element={<SignupPage />} />
 
                 {/* Protected routes */}
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <HomePage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  }
+                />
+
                 <Route
                   path="/library"
                   element={
@@ -69,8 +81,7 @@ export default function App() {
                 />
 
                 {/* Default redirect */}
-                <Route path="/" element={<Navigate to="/library" replace />} />
-                <Route path="*" element={<Navigate to="/library" replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
 
