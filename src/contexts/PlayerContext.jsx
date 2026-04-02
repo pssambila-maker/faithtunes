@@ -3,10 +3,22 @@ import { getAudioUrl, getCoverUrl } from '../services/songService';
 
 const PlayerContext = createContext(null);
 
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const STORAGE_KEY = 'faithtunes_player';
+
 export function PlayerProvider({ children }) {
   const audioRef = useRef(new Audio());
   const [currentSong, setCurrentSong] = useState(null);
   const [playlist, setPlaylist] = useState([]);
+  const [shuffledPlaylist, setShuffledPlaylist] = useState([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -14,89 +26,43 @@ export function PlayerProvider({ children }) {
   const [coverUrl, setCoverUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [repeatMode, setRepeatMode] = useState('off'); // 'off', 'all', 'one'
+  const [shuffleMode, setShuffleMode] = useState(false);
+  const [showQueue, setShowQueue] = useState(false);
+  const [showNowPlaying, setShowNowPlaying] = useState(false);
 
-  // Setup audio event listeners
+  // Load persisted preferences
   useEffect(() => {
-    const audio = audioRef.current;
-
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
-      setLoading(false);
-    };
-
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-    };
-
-    const handleEnded = () => {
-      if (repeatMode === 'one') {
-        // Repeat the same song
-        audio.currentTime = 0;
-        audio.play();
-      } else if (playlist.length > 0) {
-        // Play next song in playlist
-        const currentIndex = playlist.findIndex(s => s.id === currentSong?.id);
-        const nextIndex = currentIndex + 1;
-
-        if (nextIndex < playlist.length) {
-          // Play next song
-          playSong(playlist[nextIndex], playlist);
-        } else if (repeatMode === 'all') {
-          // Loop back to first song when repeat all is on
-          playSong(playlist[0], playlist);
-        } else {
-          // End of playlist, no repeat - stop
-          setIsPlaying(false);
-          setCurrentTime(0);
-        }
-      } else {
-        // No playlist - stop
-        setIsPlaying(false);
-        setCurrentTime(0);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const { volume: v, repeatMode: r, shuffleMode: s } = JSON.parse(saved);
+        if (v !== undefined) setVolumeState(v);
+        if (r) setRepeatMode(r);
+        if (s !== undefined) setShuffleMode(s);
       }
-    };
+    } catch {}
+  }, []);
 
-    const handleError = (e) => {
-      console.error('Audio error:', e);
-      setLoading(false);
-    };
-
-    const handleCanPlay = () => {
-      setLoading(false);
-    };
-
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-    audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('ended', handleEnded);
-    audio.addEventListener('error', handleError);
-    audio.addEventListener('canplay', handleCanPlay);
-
-    return () => {
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
-      audio.removeEventListener('canplay', handleCanPlay);
-    };
-  }, [repeatMode, playlist, currentSong]);
-
-  // Handle volume changes
+  // Persist preferences
   useEffect(() => {
-    audioRef.current.volume = volume;
-  }, [volume]);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ volume, repeatMode, shuffleMode }));
+    } catch {}
+  }, [volume, repeatMode, shuffleMode]);
 
-  const playSong = useCallback(async (song, songs = []) => {
-    if (currentSong?.id === song.id) {
-      togglePlay();
-      return;
-    }
+  const activePlaylist = shuffleMode && shuffledPlaylist.length > 0 ? shuffledPlaylist : playlist;
 
+  // Internal play — does not toggle if same song, just loads
+  const loadAndPlay = useCallback(async (song, newPlaylist = null) => {
     setLoading(true);
     setCurrentSong(song);
     setCoverUrl(null);
+    setDuration(0);
+    setCurrentTime(0);
 
-    if (songs.length > 0) {
-      setPlaylist(songs);
+    if (newPlaylist) {
+      setPlaylist(newPlaylist);
+      setShuffledPlaylist(shuffleArray(newPlaylist));
     }
 
     try {
@@ -114,11 +80,82 @@ export function PlayerProvider({ children }) {
       console.error('Error playing song:', error);
       setLoading(false);
     }
-  }, [currentSong]);
+  }, []);
+
+  // Setup audio event listeners
+  useEffect(() => {
+    const audio = audioRef.current;
+
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+      setLoading(false);
+    };
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(audio.currentTime);
+    };
+
+    const handleEnded = () => {
+      if (repeatMode === 'one') {
+        audio.currentTime = 0;
+        audio.play();
+        return;
+      }
+      if (activePlaylist.length > 0) {
+        const idx = activePlaylist.findIndex(s => s.id === currentSong?.id);
+        const nextIdx = idx + 1;
+        if (nextIdx < activePlaylist.length) {
+          loadAndPlay(activePlaylist[nextIdx]);
+        } else if (repeatMode === 'all') {
+          loadAndPlay(activePlaylist[0]);
+        } else {
+          setIsPlaying(false);
+          setCurrentTime(0);
+        }
+      } else {
+        setIsPlaying(false);
+        setCurrentTime(0);
+      }
+    };
+
+    const handleError = () => setLoading(false);
+    const handleCanPlay = () => setLoading(false);
+
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+    audio.addEventListener('canplay', handleCanPlay);
+
+    return () => {
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+      audio.removeEventListener('canplay', handleCanPlay);
+    };
+  }, [repeatMode, activePlaylist, currentSong, loadAndPlay]);
+
+  useEffect(() => {
+    audioRef.current.volume = volume;
+  }, [volume]);
+
+  const playSong = useCallback(async (song, songs = []) => {
+    if (currentSong?.id === song.id) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+      return;
+    }
+    loadAndPlay(song, songs.length > 0 ? songs : null);
+  }, [currentSong, isPlaying, loadAndPlay]);
 
   const togglePlay = useCallback(() => {
     if (!currentSong) return;
-
     if (isPlaying) {
       audioRef.current.pause();
     } else {
@@ -138,30 +175,50 @@ export function PlayerProvider({ children }) {
   }, []);
 
   const playNext = useCallback(() => {
-    if (!currentSong || playlist.length === 0) return;
-
-    const currentIndex = playlist.findIndex(s => s.id === currentSong.id);
-    const nextIndex = (currentIndex + 1) % playlist.length;
-    if (nextIndex !== currentIndex) {
-      playSong(playlist[nextIndex], playlist);
-    }
-  }, [currentSong, playlist, playSong]);
+    if (!currentSong || activePlaylist.length === 0) return;
+    const idx = activePlaylist.findIndex(s => s.id === currentSong.id);
+    const nextIdx = (idx + 1) % activePlaylist.length;
+    if (nextIdx !== idx) loadAndPlay(activePlaylist[nextIdx]);
+  }, [currentSong, activePlaylist, loadAndPlay]);
 
   const playPrevious = useCallback(() => {
-    if (!currentSong || playlist.length === 0) return;
-
-    const currentIndex = playlist.findIndex(s => s.id === currentSong.id);
-    const prevIndex = currentIndex === 0 ? playlist.length - 1 : currentIndex - 1;
-    if (prevIndex !== currentIndex) {
-      playSong(playlist[prevIndex], playlist);
+    if (!currentSong) return;
+    // Restart if more than 3s in
+    if (audioRef.current.currentTime > 3) {
+      seek(0);
+      return;
     }
-  }, [currentSong, playlist, playSong]);
+    if (activePlaylist.length === 0) return;
+    const idx = activePlaylist.findIndex(s => s.id === currentSong.id);
+    const prevIdx = idx === 0 ? activePlaylist.length - 1 : idx - 1;
+    if (prevIdx !== idx) loadAndPlay(activePlaylist[prevIdx]);
+  }, [currentSong, activePlaylist, loadAndPlay, seek]);
 
   const toggleRepeat = useCallback(() => {
     setRepeatMode(prev => {
       if (prev === 'off') return 'all';
       if (prev === 'all') return 'one';
       return 'off';
+    });
+  }, []);
+
+  const toggleShuffle = useCallback(() => {
+    setShuffleMode(prev => {
+      if (!prev && playlist.length > 0) {
+        setShuffledPlaylist(shuffleArray(playlist));
+      }
+      return !prev;
+    });
+  }, [playlist]);
+
+  const addToQueue = useCallback((song) => {
+    setPlaylist(prev => {
+      if (prev.some(s => s.id === song.id)) return prev;
+      return [...prev, song];
+    });
+    setShuffledPlaylist(prev => {
+      if (prev.some(s => s.id === song.id)) return prev;
+      return [...prev, song];
     });
   }, []);
 
@@ -174,14 +231,22 @@ export function PlayerProvider({ children }) {
     coverUrl,
     loading,
     playlist,
+    activePlaylist,
     repeatMode,
+    shuffleMode,
+    showQueue,
+    setShowQueue,
+    showNowPlaying,
+    setShowNowPlaying,
     playSong,
     togglePlay,
     seek,
     setVolume,
     playNext,
     playPrevious,
-    toggleRepeat
+    toggleRepeat,
+    toggleShuffle,
+    addToQueue,
   };
 
   return (
@@ -193,8 +258,6 @@ export function PlayerProvider({ children }) {
 
 export function usePlayer() {
   const context = useContext(PlayerContext);
-  if (!context) {
-    throw new Error('usePlayer must be used within PlayerProvider');
-  }
+  if (!context) throw new Error('usePlayer must be used within PlayerProvider');
   return context;
 }
