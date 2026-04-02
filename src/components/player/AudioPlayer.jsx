@@ -31,17 +31,11 @@ export default function AudioPlayer() {
     <>
       {/* Queue Panel */}
       {showQueue && (
-        <div className="fixed bottom-24 right-4 w-72 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div className="fixed bottom-24 right-2 md:right-4 w-72 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
             <h3 className="text-white font-semibold text-sm">Up Next</h3>
-            <button
-              onClick={() => setShowQueue(false)}
-              className="text-gray-400 hover:text-white transition text-lg leading-none"
-            >
-              ✕
-            </button>
+            <button onClick={() => setShowQueue(false)} className="text-gray-400 hover:text-white transition text-lg leading-none">✕</button>
           </div>
-          {/* Now playing */}
           <div className="px-3 py-2 border-b border-gray-800">
             <p className="text-gray-500 text-xs uppercase tracking-wide mb-1 px-2">Now Playing</p>
             <div className="flex items-center gap-3 px-2 py-1.5 rounded-lg bg-gray-800/60">
@@ -53,54 +47,97 @@ export default function AudioPlayer() {
             </div>
           </div>
           <div className="p-2 max-h-60 overflow-y-auto">
-            {upNext.length > 0 ? (
-              upNext.map((song, i) => (
-                <button
-                  key={song.id}
-                  onClick={() => { playSong(song, activePlaylist); }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800 transition text-left"
-                >
-                  <span className="text-gray-500 text-xs w-4">{currentIndex + 2 + i}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm truncate">{song.title}</p>
-                    <p className="text-gray-400 text-xs truncate">{song.artist}</p>
-                  </div>
-                </button>
-              ))
-            ) : (
+            {upNext.length > 0 ? upNext.map((song, i) => (
+              <button
+                key={song.id}
+                onClick={() => playSong(song, activePlaylist)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800 transition text-left"
+              >
+                <span className="text-gray-500 text-xs w-4">{currentIndex + 2 + i}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-sm truncate">{song.title}</p>
+                  <p className="text-gray-400 text-xs truncate">{song.artist}</p>
+                </div>
+              </button>
+            )) : (
               <p className="text-gray-500 text-sm text-center py-6">No more songs in queue</p>
             )}
           </div>
         </div>
       )}
 
-      {/* Player Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-gray-900/95 to-black border-t border-gray-800 px-4 py-3 z-50 backdrop-blur-sm">
+      {/* ── MOBILE PLAYER (hidden on md+) ── */}
+      <div className="fixed left-0 right-0 z-50 flex md:hidden flex-col bg-gray-900/95 border-t border-gray-800 backdrop-blur-sm"
+           style={{ bottom: '56px' }}> {/* sit above bottom nav (h-14) */}
+
+        {/* Thin progress bar at top */}
+        <div className="h-0.5 bg-gray-700 w-full">
+          <div className="h-full bg-green-500 transition-all" style={{ width: `${progress}%` }} />
+        </div>
+
+        {/* Compact row */}
+        <div className="flex items-center gap-3 px-3 py-2">
+          {/* Album art — tap to open now playing */}
+          <button
+            onClick={() => setShowNowPlaying(true)}
+            className="flex-shrink-0"
+          >
+            {coverUrl
+              ? <img src={coverUrl} alt={currentSong.title} className="w-11 h-11 rounded object-cover" />
+              : <div className="w-11 h-11 rounded bg-gray-700 flex items-center justify-center text-xl">🎵</div>
+            }
+          </button>
+
+          {/* Title / artist — tap to open now playing */}
+          <button
+            onClick={() => setShowNowPlaying(true)}
+            className="flex-1 min-w-0 text-left"
+          >
+            <p className="text-white text-sm font-medium truncate">{currentSong.title}</p>
+            <p className="text-gray-400 text-xs truncate">{currentSong.artist}</p>
+          </button>
+
+          {/* Controls */}
+          <FavoriteButton songId={currentSong.id} size="small" />
+
+          <button onClick={playPrevious} className="text-gray-400 p-1">
+            <SkipBack className="w-5 h-5" />
+          </button>
+
+          <button
+            onClick={togglePlay}
+            disabled={loading}
+            className="w-9 h-9 bg-white rounded-full flex items-center justify-center shadow disabled:opacity-50 flex-shrink-0"
+          >
+            {loading
+              ? <div className="w-4 h-4 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
+              : isPlaying
+                ? <Pause className="w-4 h-4 text-black fill-black" />
+                : <Play className="w-4 h-4 text-black fill-black ml-0.5" />
+            }
+          </button>
+
+          <button onClick={playNext} className="text-gray-400 p-1">
+            <SkipForward className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── DESKTOP PLAYER (hidden on mobile) ── */}
+      <div className="hidden md:block fixed bottom-0 left-0 right-0 bg-gradient-to-b from-gray-900/95 to-black border-t border-gray-800 px-4 py-3 z-50 backdrop-blur-sm">
         <div className="max-w-screen-xl mx-auto flex items-center gap-4">
 
           {/* Song Info */}
           <div className="flex items-center gap-3 w-64 min-w-0">
-            <button
-              onClick={() => setShowNowPlaying(true)}
-              className="relative group flex-shrink-0"
-              title="Open Now Playing"
-            >
-              {coverUrl ? (
-                <img
-                  src={coverUrl}
-                  alt={currentSong.title}
-                  className="w-14 h-14 rounded shadow-lg object-cover group-hover:opacity-75 transition"
-                />
-              ) : (
-                <div className="w-14 h-14 bg-gray-700 rounded shadow-lg flex items-center justify-center group-hover:opacity-75 transition">
-                  <span className="text-2xl">🎵</span>
-                </div>
-              )}
+            <button onClick={() => setShowNowPlaying(true)} className="relative group flex-shrink-0" title="Open Now Playing">
+              {coverUrl
+                ? <img src={coverUrl} alt={currentSong.title} className="w-14 h-14 rounded shadow-lg object-cover group-hover:opacity-75 transition" />
+                : <div className="w-14 h-14 bg-gray-700 rounded shadow-lg flex items-center justify-center group-hover:opacity-75 transition"><span className="text-2xl">🎵</span></div>
+              }
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                 <Maximize2 className="w-4 h-4 text-white drop-shadow" />
               </div>
             </button>
-
             <div className="min-w-0 flex-1">
               <p className="text-white font-medium truncate text-sm">{currentSong.title}</p>
               <p className="text-gray-400 text-xs truncate">{currentSong.artist}</p>
@@ -111,91 +148,49 @@ export default function AudioPlayer() {
           {/* Player Controls */}
           <div className="flex-1 flex flex-col items-center gap-1 max-w-2xl">
             <div className="flex items-center gap-5">
-              <button
-                onClick={toggleShuffle}
-                className={`transition ${shuffleMode ? 'text-green-500' : 'text-gray-500 hover:text-white'}`}
-                title={shuffleMode ? 'Shuffle On' : 'Shuffle Off'}
-              >
+              <button onClick={toggleShuffle} className={`transition ${shuffleMode ? 'text-green-500' : 'text-gray-500 hover:text-white'}`} title="Shuffle">
                 <Shuffle className="w-4 h-4" />
               </button>
-
-              <button
-                onClick={playPrevious}
-                className="text-gray-400 hover:text-white transition"
-                title="Previous"
-              >
+              <button onClick={playPrevious} className="text-gray-400 hover:text-white transition" title="Previous">
                 <SkipBack className="w-5 h-5" />
               </button>
-
               <button
                 onClick={togglePlay}
                 disabled={loading}
                 className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:scale-105 transition shadow-lg disabled:opacity-50"
                 title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
               >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
-                ) : isPlaying ? (
-                  <Pause className="w-5 h-5 text-black fill-black" />
-                ) : (
-                  <Play className="w-5 h-5 text-black fill-black ml-0.5" />
-                )}
+                {loading
+                  ? <div className="w-5 h-5 border-2 border-gray-400 border-t-black rounded-full animate-spin" />
+                  : isPlaying
+                    ? <Pause className="w-5 h-5 text-black fill-black" />
+                    : <Play className="w-5 h-5 text-black fill-black ml-0.5" />
+                }
               </button>
-
-              <button
-                onClick={playNext}
-                className="text-gray-400 hover:text-white transition"
-                title="Next"
-              >
+              <button onClick={playNext} className="text-gray-400 hover:text-white transition" title="Next">
                 <SkipForward className="w-5 h-5" />
               </button>
-
-              <button
-                onClick={toggleRepeat}
-                className={`transition ${repeatMode !== 'off' ? 'text-green-500' : 'text-gray-500 hover:text-white'}`}
-                title={repeatMode === 'one' ? 'Repeat One' : repeatMode === 'all' ? 'Repeat All' : 'Repeat Off'}
-              >
+              <button onClick={toggleRepeat} className={`transition ${repeatMode !== 'off' ? 'text-green-500' : 'text-gray-500 hover:text-white'}`} title="Repeat">
                 {repeatMode === 'one' ? <Repeat1 className="w-4 h-4" /> : <Repeat className="w-4 h-4" />}
               </button>
             </div>
-
             <div className="w-full flex items-center gap-2">
-              <span className="text-xs text-gray-400 w-10 text-right tabular-nums">
-                {formatTime(currentTime)}
-              </span>
-              <ProgressBar
-                progress={progress}
-                duration={duration}
-                onSeek={(percent) => seek(percent * duration)}
-              />
-              <span className="text-xs text-gray-400 w-10 tabular-nums">
-                {formatTime(duration)}
-              </span>
+              <span className="text-xs text-gray-400 w-10 text-right tabular-nums">{formatTime(currentTime)}</span>
+              <ProgressBar progress={progress} duration={duration} onSeek={(p) => seek(p * duration)} />
+              <span className="text-xs text-gray-400 w-10 tabular-nums">{formatTime(duration)}</span>
             </div>
           </div>
 
           {/* Right Controls */}
           <div className="w-44 flex items-center gap-3 justify-end">
-            <button
-              onClick={() => setShowQueue(q => !q)}
-              className={`transition ${showQueue ? 'text-green-500' : 'text-gray-500 hover:text-white'}`}
-              title="Queue"
-            >
+            <button onClick={() => setShowQueue(q => !q)} className={`transition ${showQueue ? 'text-green-500' : 'text-gray-500 hover:text-white'}`} title="Queue">
               <ListMusic className="w-5 h-5" />
             </button>
-            <button
-              onClick={() => setVolume(volume === 0 ? 1 : 0)}
-              className="text-gray-400 hover:text-white transition"
-              title={volume === 0 ? 'Unmute (M)' : 'Mute (M)'}
-            >
+            <button onClick={() => setVolume(volume === 0 ? 1 : 0)} className="text-gray-400 hover:text-white transition" title="Mute (M)">
               {volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
             </button>
             <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
+              type="range" min="0" max="1" step="0.01" value={volume}
               onChange={(e) => setVolume(parseFloat(e.target.value))}
               className="w-20 h-1 accent-green-500"
               title={`Volume: ${Math.round(volume * 100)}%`}

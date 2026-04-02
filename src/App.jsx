@@ -6,6 +6,7 @@ import { PlayerProvider } from './contexts/PlayerContext';
 import { FavoritesProvider } from './contexts/FavoritesContext';
 import ProtectedRoute from './components/ui/ProtectedRoute';
 import Sidebar from './components/ui/Sidebar';
+import BottomNav from './components/ui/BottomNav';
 import AudioPlayer from './components/player/AudioPlayer';
 import NowPlayingModal from './components/player/NowPlayingModal';
 import Loader from './components/ui/Loader';
@@ -64,7 +65,8 @@ function AppLayout() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-900">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto pb-24 min-w-0" id="main-content">
+      {/* pb accounts for: desktop player (88px) on md+, mobile player+bottom nav (~112px) on small */}
+      <main className="flex-1 overflow-y-auto pb-28 md:pb-24 min-w-0" id="main-content">
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
             <Outlet />
@@ -72,6 +74,7 @@ function AppLayout() {
         </ErrorBoundary>
       </main>
       <AudioPlayer />
+      <BottomNav />
       <NowPlayingModal />
     </div>
   );

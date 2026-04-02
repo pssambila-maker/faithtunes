@@ -66,12 +66,12 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-900 pb-32">
       {/* Header */}
-      <header className="bg-gradient-to-b from-green-900/40 to-gray-900 px-6 pt-6 pb-8">
+      <header className="bg-gradient-to-b from-green-900/40 to-gray-900 px-4 md:px-6 pt-5 pb-6">
         <div className="max-w-screen-xl mx-auto">
-          <h1 className="text-3xl font-bold text-white mb-6">Good {getGreeting()}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">Good {getGreeting()}</h1>
 
           {/* Search Bar */}
-          <div className="relative max-w-md">
+          <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
@@ -84,7 +84,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="px-6 py-4">
+      <main className="px-4 md:px-6 py-4">
         <div className="max-w-screen-xl mx-auto">
           {/* Search Results */}
           {searchTerm ? (
@@ -93,7 +93,7 @@ export default function HomePage() {
                 Results for "{searchTerm}"
               </h2>
               {searchResults.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
                   {searchResults.map(song => (
                     <CompactSongCard
                       key={song.id}
@@ -148,7 +148,7 @@ export default function HomePage() {
                       Show all
                     </button>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
                     {favoriteSongs.map(song => (
                       <CompactSongCard
                         key={song.id}
@@ -173,7 +173,7 @@ export default function HomePage() {
                     Show all
                   </button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
                   {recentlyAdded.map(song => (
                     <CompactSongCard
                       key={song.id}
@@ -197,7 +197,7 @@ export default function HomePage() {
                     View library
                   </button>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
                   {songs.slice(0, 12).map(song => (
                     <CompactSongCard
                       key={song.id}

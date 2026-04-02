@@ -113,16 +113,16 @@ export default function LibraryPage() {
   return (
     <div className="min-h-screen bg-gray-900 pb-32">
       {/* Header */}
-      <header className="sticky top-0 bg-gray-900/95 backdrop-blur-sm z-10 px-6 py-4 border-b border-gray-800">
+      <header className="sticky top-0 bg-gray-900/95 backdrop-blur-sm z-10 px-4 md:px-6 py-3 border-b border-gray-800">
         <div className="max-w-screen-xl mx-auto">
           {/* Title row */}
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <Library className="w-7 h-7 text-green-500" />
-              <h1 className="text-2xl font-bold text-white">Your Library</h1>
+            <div className="flex items-center gap-2">
+              <Library className="w-6 h-6 text-green-500 flex-shrink-0" />
+              <h1 className="text-xl md:text-2xl font-bold text-white">Your Library</h1>
               {isAdmin && (
-                <span className="text-gray-500 text-sm">
-                  ({allSongs.length} of {totalCount} loaded)
+                <span className="text-gray-500 text-xs hidden sm:inline">
+                  ({allSongs.length}/{totalCount})
                 </span>
               )}
             </div>
@@ -144,6 +144,23 @@ export default function LibraryPage() {
                 <List className="w-4 h-4" />
               </button>
             </div>
+          </div>
+
+          {/* Search — full width on mobile */}
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search songs..."
+              className="w-full pl-9 pr-8 py-2 bg-gray-800 text-white text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 placeholder-gray-400"
+            />
+            {searchTerm && (
+              <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Controls row */}
@@ -174,23 +191,23 @@ export default function LibraryPage() {
                   className="flex items-center gap-2 bg-green-500 hover:bg-green-400 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-semibold px-4 py-2 rounded-full transition text-sm"
                 >
                   <Play className="w-4 h-4 fill-black" />
-                  Play All
+                  <span className="hidden sm:inline">Play All</span>
                 </button>
                 <button
                   onClick={handleShufflePlay}
                   disabled={sortedSongs.length === 0}
-                  className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white px-4 py-2 rounded-full transition text-sm"
+                  className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white px-3 py-2 rounded-full transition text-sm"
                 >
                   <Shuffle className="w-4 h-4" />
-                  Shuffle
+                  <span className="hidden sm:inline">Shuffle</span>
                 </button>
                 <button
                   onClick={toggleSelectMode}
                   disabled={sortedSongs.length === 0}
-                  className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white px-4 py-2 rounded-full transition text-sm"
+                  className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white px-3 py-2 rounded-full transition text-sm"
                 >
                   <CheckSquare className="w-4 h-4" />
-                  Select
+                  <span className="hidden sm:inline">Select</span>
                 </button>
 
                 {/* Sort */}
@@ -221,25 +238,6 @@ export default function LibraryPage() {
               </>
             )}
 
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search songs..."
-                className="w-56 pl-9 pr-8 py-2 bg-gray-800 text-white text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-green-500 transition placeholder-gray-400"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
           </div>
         </div>
       </header>

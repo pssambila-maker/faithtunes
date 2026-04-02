@@ -53,8 +53,10 @@ export default function NowPlayingModal() {
         onClick={() => setShowNowPlaying(false)}
       />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-2xl">
+      {/* Modal — full-screen on mobile, card on desktop */}
+      <div className="relative w-full max-w-md md:mx-4 md:rounded-2xl overflow-hidden shadow-2xl
+                      md:max-h-screen
+                      max-md:fixed max-md:inset-0 max-md:rounded-none">
         {/* Blurred background */}
         <div className="absolute inset-0 overflow-hidden">
           {coverUrl ? (
@@ -82,7 +84,7 @@ export default function NowPlayingModal() {
           <p className="text-white/60 text-xs text-center uppercase tracking-widest mb-6">Now Playing</p>
 
           {/* Album Art */}
-          <div className="w-56 h-56 mx-auto mb-6 rounded-xl overflow-hidden shadow-2xl bg-gray-800">
+          <div className="w-56 h-56 md:w-56 md:h-56 mx-auto mb-6 rounded-xl overflow-hidden shadow-2xl bg-gray-800" style={{ width: 'min(224px, 60vw)', height: 'min(224px, 60vw)' }}>
             {coverUrl ? (
               <img src={coverUrl} alt={currentSong.title} className="w-full h-full object-cover" />
             ) : (

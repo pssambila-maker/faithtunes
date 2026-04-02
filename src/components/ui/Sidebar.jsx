@@ -34,7 +34,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`flex-shrink-0 flex flex-col bg-black z-40 transition-all duration-300 h-screen sticky top-0 overflow-y-auto ${
+      className={`hidden md:flex flex-shrink-0 flex-col bg-black z-40 transition-all duration-300 h-screen sticky top-0 overflow-y-auto ${
         collapsed ? 'w-16' : 'w-60'
       }`}
       style={{ paddingBottom: '88px' }} /* leave space for player */
